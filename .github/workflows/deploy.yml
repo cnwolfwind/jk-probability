@@ -11,21 +11,16 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Deploy to ECS via SSH
+        uses: appleboy/ssh-action@v0.1.10
         with:
-          path: deploy
-
-      - name: Setup rsync
-        run: sudo apt-get install -y rsync
-
-      - name: Deploy to ECS
-        env:
-          DEPLOY_KEY: ${{ secrets.DEPLOY_SECRET }}
-        run: |
-          mkdir -p ~/.ssh
-          echo "$DEPLOY_KEY" > /tmp/deploy_key
-          chmod 600 /tmp/deploy_key
-          ssh-keyscan -H 121.196.229.11 >> ~/.ssh/known_hosts 2>/dev/null
-          rsync -avz --delete \
-            -e "ssh -o StrictHostKeyChecking=no -i /tmp/deploy_key" \
-            ${{ github.workspace }}/deploy/ root@121.196.229.11:/var/www/jk-probability/
-          echo "Deployment done at $(date)"
+          host: 121.196.229.11
+          username: root
+          key: ${{ secrets.DEPLOY_SECRET }}
+          script: |
+            mkdir -p /var/www/jk-probability
+            cd /var/www/jk-probability
+            git fetch origin main
+            git reset --hard origin/main
+            echo "Deployment completed at $(date)"
