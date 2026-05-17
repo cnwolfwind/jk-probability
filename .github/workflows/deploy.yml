@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          path: deploy
 
       - name: Deploy to ECS via SSH
         uses: appleboy/ssh-action@v0.1.10
@@ -19,8 +21,29 @@ jobs:
           username: root
           key: ${{ secrets.DEPLOY_SECRET }}
           script: |
-            mkdir -p /var/www/jk-probability
-            cd /var/www/jk-probability
+            set -e
+            TARGET="/var/www/jk-probability"
+            
+            # Backup user data before reset
+            DATA_BACKUP="/tmp/submissions.json.bak"
+            cp "$TARGET/submissions.json" "$DATA_BACKUP" 2>/dev/null || true
+            
+            # Pull latest code
+            cd "$TARGET"
             git fetch origin main
             git reset --hard origin/main
-            echo "Deployment completed at $(date)"
+            
+            # Restore user data (git reset would overwrite it)
+            cp "$DATA_BACKUP" "$TARGET/submissions.json" 2>/dev/null || true
+            
+            # Ensure data file is writable and locked from git
+            chmod 666 "$TARGET/submissions.json"
+            git update-index --assume-unchanged "$TARGET/submissions.json" 2>/dev/null || true
+            
+            # Restart PM2
+            pm2 stop jk-server 2>/dev/null || true
+            pm2 start "$TARGET/ecosystem.config.js" 2>/dev/null || \
+              pm2 start server.js --name jk-server
+            pm2 save
+            
+            echo "Deployed $(date) | data preserved"
