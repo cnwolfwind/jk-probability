@@ -19,8 +19,15 @@ jobs:
           username: root
           key: ${{ secrets.DEPLOY_SECRET }}
           script: |
-            mkdir -p /var/www/jk-probability
-            cd /var/www/jk-probability
-            git fetch origin main
-            git reset --hard origin/main
-            echo "Deployment completed at $(date)"
+            TARGET="/var/www/jk-probability"
+            if [ -d "$TARGET/.git" ]; then
+              cd "$TARGET"
+              git fetch origin main
+              git reset --hard origin/main
+              echo "git reset OK at $(date)"
+            else
+              rm -rf "$TARGET"
+              git clone https://github.com/cnwolfwind/jk-probability.git "$TARGET"
+              echo "git clone OK at $(date)"
+            fi
+            echo "Deployed at $(date)"
