@@ -757,13 +757,15 @@ body {
 /* ===== VERSION TAG ===== */
 #version-tag {
   position: fixed;
-  bottom: 1rem;
-  right: 1rem;
+  bottom: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 9999;
   font-family: 'JetBrainsMono', monospace;
-  font-size: 0.7rem;
-  color: rgba(168, 180, 200, 0.35);
+  font-size: 0.65rem;
+  color: rgba(168, 180, 200, 0.3);
   letter-spacing: 0.05em;
   pointer-events: none;
   user-select: none;
+  white-space: nowrap;
 }
