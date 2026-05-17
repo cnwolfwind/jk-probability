@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>管理面板 - JK概率</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Noto Serif SC', serif;
+      background: #0d0d14;
+      color: #c0c4cc;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    .container { max-width: 860px; margin: 0 auto; }
+
+    /* Login */
+    #login-view { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; }
+    .login-box {
+      background: rgba(14, 14, 22, 0.8);
+      border: 1px solid rgba(168, 180, 200, 0.1);
+      border-radius: 8px;
+      padding: 2.5rem 3rem;
+      text-align: center;
+    }
+    .login-box h1 { font-size: 1.2rem; color: rgba(168, 180, 200, 0.7); letter-spacing: 0.2em; margin-bottom: 1.5rem; }
+    .login-box input {
+      width: 100%;
+      background: rgba(8, 8, 14, 0.8);
+      border: 1px solid rgba(168, 180, 200, 0.15);
+      border-radius: 4px;
+      padding: 0.7rem 1rem;
+      color: #c0c4cc;
+      font-family: inherit;
+      font-size: 1rem;
+      text-align: center;
+      outline: none;
+      margin-bottom: 1rem;
+    }
+    .login-box input:focus { border-color: rgba(168, 180, 200, 0.35); }
+    .login-btn {
+      width: 100%;
+      padding: 0.7rem;
+      background: transparent;
+      border: 1px solid rgba(168, 180, 200, 0.25);
+      border-radius: 4px;
+      color: rgba(168, 180, 200, 0.7);
+      font-family: inherit;
+      font-size: 0.85rem;
+      letter-spacing: 0.2em;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .login-btn:hover { background: rgba(168, 180, 200, 0.05); border-color: rgba(168, 180, 200, 0.4); }
+    .login-error { color: #e88; font-size: 0.75rem; margin-top: 0.8rem; min-height: 1.2em; }
+
+    /* Admin view */
+    #admin-view { display: none; }
+    #admin-view.visible { display: block; }
+
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(168, 180, 200, 0.08);
+    }
+    .admin-header h1 { font-size: 1rem; color: rgba(168, 180, 200, 0.7); letter-spacing: 0.2em; }
+    .admin-actions { display: flex; gap: 0.6rem; }
+    .btn {
+      padding: 0.5rem 1rem;
+      background: transparent;
+      border: 1px solid rgba(168, 180, 200, 0.15);
+      border-radius: 4px;
+      color: rgba(168, 180, 200, 0.6);
+      font-family: inherit;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+    .btn:hover { background: rgba(168, 180, 200, 0.07); border-color: rgba(168, 180, 200, 0.3); }
+    .btn-danger { border-color: rgba(220, 100, 100, 0.25); color: rgba(220, 120, 120, 0.7); }
+    .btn-danger:hover { background: rgba(220, 100, 100, 0.08); border-color: rgba(220, 100, 100, 0.45); }
+
+    /* Stats */
+    .stats-row {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat-pill {
+      background: rgba(14, 14, 22, 0.7);
+      border: 1px solid rgba(168, 180, 200, 0.08);
+      border-radius: 6px;
+      padding: 0.8rem 1.5rem;
+      font-size: 0.8rem;
+    }
+    .stat-pill span { color: rgba(168, 180, 200, 0.85); font-weight: 500; margin-left: 0.4rem; }
+
+    /* Table */
+    .table-wrap {
+      background: rgba(12, 12, 20, 0.5);
+      border: 1px solid rgba(168, 180, 200, 0.07);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      text-align: left;
+      padding: 0.8rem 1rem;
+      font-size: 0.65rem;
+      color: rgba(168, 180, 200, 0.4);
+      letter-spacing: 0.15em;
+      border-bottom: 1px solid rgba(168, 180, 200, 0.07);
+      background: rgba(14, 14, 22, 0.5);
+    }
+    td {
+      padding: 0.75rem 1rem;
+      font-size: 0.8rem;
+      border-bottom: 1px solid rgba(168, 180, 200, 0.04);
+      vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(168, 180, 200, 0.03); }
+    .del-btn {
+      background: transparent;
+      border: 1px solid rgba(220, 100, 100, 0.2);
+      color: rgba(220, 120, 120, 0.6);
+      padding: 0.3rem 0.7rem;
+      border-radius: 3px;
+      font-size: 0.65rem;
+      cursor: pointer;
+      font-family: inherit;
+      letter-spacing: 0.1em;
+      transition: all 0.2s;
+    }
+    .del-btn:hover { background: rgba(220, 100, 100, 0.1); border-color: rgba(220, 100, 100, 0.4); }
+    .empty-msg { text-align: center; padding: 3rem; color: rgba(168, 180, 200, 0.3); font-size: 0.8rem; }
+
+    /* Change password modal */
+    #pwd-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+    }
+    #pwd-modal.show { display: flex; }
+    .modal-box {
+      background: #111118;
+      border: 1px solid rgba(168, 180, 200, 0.12);
+      border-radius: 8px;
+      padding: 2rem;
+      width: 340px;
+    }
+    .modal-box h3 { font-size: 0.85rem; color: rgba(168, 180, 200, 0.7); letter-spacing: 0.2em; margin-bottom: 1.2rem; text-align: center; }
+    .modal-box input {
+      width: 100%;
+      background: rgba(8, 8, 14, 0.8);
+      border: 1px solid rgba(168, 180, 200, 0.15);
+      border-radius: 4px;
+      padding: 0.65rem 0.85rem;
+      color: #c0c4cc;
+      font-family: inherit;
+      font-size: 0.85rem;
+      outline: none;
+      margin-bottom: 0.8rem;
+    }
+    .modal-box input:focus { border-color: rgba(168, 180, 200, 0.3); }
+    .modal-btns { display: flex; gap: 0.6rem; margin-top: 0.5rem; }
+    .modal-btns .btn { flex: 1; text-align: center; padding: 0.65rem; }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      top: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(-120%);
+      background: rgba(14, 14, 22, 0.85);
+      border: 1px solid rgba(168, 180, 200, 0.15);
+      border-radius: 6px;
+      padding: 0.6rem 1.4rem;
+      font-size: 0.8rem;
+      color: rgba(168, 180, 200, 0.7);
+      backdrop-filter: blur(8px);
+      transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 300;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+  <!-- Login -->
+  <div id="login-view">
+    <div class="login-box">
+      <h1>管理面板</h1>
+      <input type="password" id="pwd-input" placeholder="输入密码" />
+      <button class="login-btn" id="login-btn">登录</button>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>
+
+  <!-- Admin -->
+  <div id="admin-view">
+    <div class="container">
+      <div class="admin-header">
+        <h1>JK概率 · 数据管理</h1>
+        <div class="admin-actions">
+          <button class="btn" id="change-pwd-btn">修改密码</button>
+          <button class="btn" id="refresh-btn">刷新</button>
+          <button class="btn btn-danger" id="clear-all-btn">清空全部</button>
+          <button class="btn" id="logout-btn">退出</button>
+        </div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-pill">总人数 <span id="total-count">0</span></div>
+        <div class="stat-pill">平均概率 <span id="avg-prob">0</span>%</div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>名字</th>
+              <th>概率</th>
+              <th>时间</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+        <div class="empty-msg" id="empty-msg" style="display:none">暂无数据</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Change password modal -->
+  <div id="pwd-modal">
+    <div class="modal-box">
+      <h3>修改密码</h3>
+      <input type="password" id="new-pwd" placeholder="新密码" />
+      <input type="password" id="confirm-pwd" placeholder="确认新密码" />
+      <div class="modal-btns">
+        <button class="btn" id="pwd-cancel">取消</button>
+        <button class="btn" id="pwd-save">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const API = '';
+    let token = localStorage.getItem('jk_admin_token') || '';
+    let submissions = [];
+
+    const loginView = document.getElementById('login-view');
+    const adminView = document.getElementById('admin-view');
+    const pwdInput = document.getElementById('pwd-input');
+    const loginBtn = document.getElementById('login-btn');
+    const loginError = document.getElementById('login-error');
+    const tableBody = document.getElementById('table-body');
+    const emptyMsg = document.getElementById('empty-msg');
+    const totalCount = document.getElementById('total-count');
+    const avgProb = document.getElementById('avg-prob');
+    const toast = document.getElementById('toast');
+    const pwdModal = document.getElementById('pwd-modal');
+
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    function formatTime(ts) {
+      const d = new Date(ts);
+      return `${d.getMonth()+1}/${d.getDate()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+    }
+
+    async function doLogin(pwd) {
+      const res = await fetch(`${API}/api/admin/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pwd }),
+      });
+      const data = await res.json();
+      if (data.token) {
+        token = data.token;
+        localStorage.setItem('jk_admin_token', token);
+        loginView.style.display = 'none';
+        adminView.classList.add('visible');
+        loadData();
+      } else {
+        loginError.textContent = data.error || '密码错误';
+      }
+    }
+
+    loginBtn.addEventListener('click', () => {
+      if (!pwdInput.value) { loginError.textContent = '请输入密码'; return; }
+      doLogin(pwdInput.value);
+    });
+    pwdInput.addEventListener('keydown', e => { if (e.key === 'Enter') loginBtn.click(); });
+
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      localStorage.removeItem('jk_admin_token');
+      token = '';
+      adminView.classList.remove('visible');
+      loginView.style.display = 'flex';
+      pwdInput.value = '';
+      loginError.textContent = '';
+    });
+
+    async function loadData() {
+      const res = await fetch(`${API}/api/admin/submissions`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.status === 401) { document.getElementById('logout-btn').click(); return; }
+      submissions = await res.json();
+      renderTable();
+    }
+
+    function renderTable() {
+      totalCount.textContent = submissions.length;
+      const avg = submissions.length ? (submissions.reduce((s, r) => s + parseFloat(r.probability), 0) / submissions.length).toFixed(1) : '0';
+      avgProb.textContent = avg;
+
+      if (submissions.length === 0) {
+        tableBody.innerHTML = '';
+        emptyMsg.style.display = 'block';
+        return;
+      }
+      emptyMsg.style.display = 'none';
+      tableBody.innerHTML = submissions.map(s => `
+        <tr>
+          <td>${s.name}</td>
+          <td>${parseFloat(s.probability).toFixed(1)}%</td>
+          <td>${formatTime(s.createdAt)}</td>
+          <td><button class="del-btn" data-id="${s.id}">删除</button></td>
+        </tr>
+      `).join('');
+    }
+
+    tableBody.addEventListener('click', async e => {
+      if (e.target.classList.contains('del-btn')) {
+        const id = e.target.dataset.id;
+        if (!confirm('确认删除？')) return;
+        const res = await fetch(`${API}/api/admin/submissions/${id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) { loadData(); showToast('已删除'); }
+        else { const d = await res.json(); showToast(d.error || '删除失败'); }
+      }
+    });
+
+    document.getElementById('clear-all-btn').addEventListener('click', async () => {
+      if (!confirm('确定清空所有数据？此操作不可恢复！')) return;
+      const res = await fetch(`${API}/api/admin/submissions`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) { loadData(); showToast('已清空'); }
+      else { const d = await res.json(); showToast(d.error || '清空失败'); }
+    });
+
+    document.getElementById('refresh-btn').addEventListener('click', loadData);
+
+    // Change password
+    document.getElementById('change-pwd-btn').addEventListener('click', () => pwdModal.classList.add('show'));
+    document.getElementById('pwd-cancel').addEventListener('click', () => pwdModal.classList.remove('show'));
+    document.getElementById('pwd-save').addEventListener('click', async () => {
+      const np = document.getElementById('new-pwd').value;
+      const cp = document.getElementById('confirm-pwd').value;
+      if (!np) { showToast('请输入新密码'); return; }
+      if (np !== cp) { showToast('两次密码不一致'); return; }
+      const res = await fetch(`${API}/api/admin/password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ password: np }),
+      });
+      const d = await res.json();
+      if (d.success) {
+        showToast('密码已修改');
+        pwdModal.classList.remove('show');
+        document.getElementById('new-pwd').value = '';
+        document.getElementById('confirm-pwd').value = '';
+      } else { showToast(d.error || '修改失败'); }
+    });
+
+    // Auto-login if token exists
+    if (token) {
+      loginView.style.display = 'none';
+      adminView.classList.add('visible');
+      loadData();
+    }
+  </script>
+</body>
+</html>
