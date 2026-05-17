@@ -11,13 +11,15 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          path: deploy
 
       - name: Setup rsync
         run: sudo apt-get install -y rsync
 
       - name: Deploy to ECS
         env:
-          DEPLOY_KEY: *** secrets.DEPLOY_SECRET }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SECRET }}
         run: |
           mkdir -p ~/.ssh
           echo "$DEPLOY_KEY" > /tmp/deploy_key
@@ -25,5 +27,5 @@ jobs:
           ssh-keyscan -H 121.196.229.11 >> ~/.ssh/known_hosts 2>/dev/null
           rsync -avz --delete \
             -e "ssh -o StrictHostKeyChecking=no -i /tmp/deploy_key" \
-            ${{ github.workspace }}/ root@121.196.229.11:/var/www/jk-probability/
-          echo "Deployment completed at $(date)"  
+            ${{ github.workspace }}/deploy/ root@121.196.229.11:/var/www/jk-probability/
+          echo "Deployment done at $(date)"          
