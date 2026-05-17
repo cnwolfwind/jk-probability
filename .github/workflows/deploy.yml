@@ -19,8 +19,5 @@ jobs:
           username: root
           key: ${{ secrets.DEPLOY_SECRET }}
           script: |
-            mkdir -p /var/www/jk-probability
-            cd /var/www/jk-probability
-            git fetch origin main
-            git reset --hard origin/main
+            rsync -avz --delete /github/workspace/ /var/www/jk-probability/
             echo "Deployment completed at $(date)"   
