@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JK概率</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.cn" />
+  <link rel="preconnect" href="https://fonts.gstatic.com.cn" crossorigin />
+  <link href="https://fonts.googleapis.cn/css2?family=Noto+Serif+SC:wght@300;400;600&family=Ma+Shan+Zheng&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet" />
+  <script src="js/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- 背景视频 - 雨林全屏 -->
+  <div id="bg-poster"></div>
+  <video id="bg-video" autoplay muted loop playsinline preload="auto">
+    <source src="media/rain_forest_h264.mp4" type="video/mp4">
+    <source src="media/rain_forest_av1.webm" type="video/webm">
+  </video>
+  <audio id="bg-audio" autoplay loop preload>
+    <source src="media/rain_ambient.mp3" type="audio/mp3">
+  </audio>
+  <div id="bg-video-overlay"></div>
+
+  <!-- 顶部标题 -->
+  <header class="site-header">
+    <h1 class="logo">
+      <span class="logo-bracket">[</span>
+      JK概率
+      <span class="logo-bracket">]</span>
+    </h1>
+    <p class="tagline">烟云印疏桐 &nbsp;/&nbsp; <span class="tagline-en">rainyour</span></p>
+    <p class="sub">每个人都有自己认同的概率刻度</p>
+  </header>
+
+  <!-- 数轴展示区 -->
+  <section class="numberline-section">
+    <div class="numberline-wrapper">
+      <div class="numberline-track">
+        <div class="numberline-axis"></div>
+        <div class="numberline-ticks" id="ticks"></div>
+        <div class="numberline-dots" id="dots"></div>
+      </div>
+      <div class="empty-state" id="empty-state">
+        <div class="empty-pulse"></div>
+        <p>还没有人填写，成为第一个</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 填写者列表 -->
+  <section class="entries-list-section" id="entries-list-section">
+    <h2 class="entries-title">已填写 <span id="entry-count">0</span> 人</h2>
+    <div class="entries-grid" id="entries-grid"></div>
+  </section>
+
+  <!-- 统计图表区 -->
+  <section class="stats-section" id="stats-section">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3 class="stat-title">概率分布</h3>
+        <div class="chart-container">
+          <canvas id="pieChart"></canvas>
+        </div>
+        <div class="pie-legend" id="pie-legend"></div>
+      </div>
+    </div>
+    <div class="rank-section">
+      <h3 class="stat-title">填写排行</h3>
+      <div class="chart-container rank-chart">
+        <canvas id="lineChart"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- 行书文字区 -->
+  <section class="calligraphy-section" id="calligraphy-section">
+    <div class="calligraphy-card">
+      <p class="calligraphy-text" id="calligraphy-text"></p>
+    </div>
+  </section>
+
+  <!-- 表单区 -->
+  <section class="form-section">
+    <div class="form-card">
+      <div class="form-header">
+        <h2>填写你认同的概率</h2>
+      </div>
+      <form id="jk-form">
+        <div class="form-group">
+          <label for="name-input" class="form-label">名字</label>
+          <input
+            type="text"
+            id="name-input"
+            class="form-input"
+            placeholder="输入你的名字"
+            maxlength="10"
+            autocomplete="off"
+          />
+          <span class="char-count"><span id="char-num">0</span>/10</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">概率</label>
+          <div class="probability-display">
+            <input
+              type="number"
+              id="prob-number"
+              class="prob-number-input"
+              min="0.1"
+              max="100"
+              step="0.1"
+              value="50.0"
+            />
+            <span class="prob-percent">%</span>
+          </div>
+          <input
+            type="range"
+            id="prob-slider"
+            class="prob-slider"
+            min="1"
+            max="1000"
+            step="1"
+            value="500"
+          />
+          <div class="prob-labels">
+            <span>0%</span>
+            <span>100%</span>
+          </div>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submit-btn">
+          <span class="btn-text">提交</span>
+          <span class="btn-loading">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+          </span>
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <!-- 成功提示 -->
+  <div class="toast" id="toast">
+    <span class="toast-icon">✓</span>
+    <span class="toast-msg">提交成功！</span>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
