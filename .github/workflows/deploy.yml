@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          path: deploy
 
       - name: Deploy to ECS via SSH
         uses: appleboy/ssh-action@v0.1.10
@@ -19,15 +21,52 @@ jobs:
           username: root
           key: ${{ secrets.DEPLOY_SECRET }}
           script: |
+            set -e
             TARGET="/var/www/jk-probability"
-            if [ -d "$TARGET/.git" ]; then
-              cd "$TARGET"
-              git fetch origin main
-              git reset --hard origin/main
-              echo "git reset OK at $(date)"
-            else
-              rm -rf "$TARGET"
-              git clone https://github.com/cnwolfwind/jk-probability.git "$TARGET"
-              echo "git clone OK at $(date)"
+            
+            # Sync files (rsync from GitHub runner via SCP via ssh-action)
+            # The appleboy/ssh-action already provides the connection,
+            # but we need to pull from GitHub inside the SSH session
+            cd "$TARGET"
+            
+            # Ensure submissions.json exists and is writable
+            if [ ! -f "$TARGET/submissions.json" ]; then
+              echo "[]" > "$TARGET/submissions.json"
             fi
-            echo "Deployed at $(date)"
+            chmod 666 "$TARGET/submissions.json"
+            
+            # Pull latest from GitHub (using DEPLOY_SECRET as temp token)
+            git config --global credential.helper "store"
+            echo "https://x-access-token:${{ secrets.DEPLOY_SECRET }}@github.com" > ~/.git-credentials
+            git pull origin main --force
+            
+            # Restart or start PM2
+            cd "$TARGET"
+            pm2 stop jk-server 2>/dev/null || true
+            pm2 start server.js --name jk-server -- \
+              --port 3008 \
+              --name jk-probability \
+              --submissions "$TARGET/submissions.json" \
+              || {
+                # If server.js args not supported, use ecosystem.config.js
+                echo "Using ecosystem config..."
+              }
+            
+            # Try with ecosystem config if built-in args don't work
+            cat > "$TARGET/ecosystem.config.js" << 'PMEOF'
+module.exports = {
+  apps: [{
+    name: 'jk-server',
+    script: 'server.js',
+    cwd: '/var/www/jk-probability',
+    env: {
+      PORT: 3008,
+      DATA_FILE: '/var/www/jk-probability/submissions.json'
+    }
+  }]
+};
+PMEOF
+            pm2 stop jk-server 2>/dev/null || true
+            pm2 start "$TARGET/ecosystem.config.js"
+            
+            echo "Deployment done at $(date)"
