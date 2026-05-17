@@ -19,10 +19,11 @@ jobs:
         env:
           DEPLOY_KEY: ${{ secrets.DEPLOY_SECRET }}
         run: |
+          mkdir -p ~/.ssh
           echo "$DEPLOY_KEY" > /tmp/deploy_key
           chmod 600 /tmp/deploy_key
           ssh-keyscan -H 121.196.229.11 >> ~/.ssh/known_hosts 2>/dev/null
           rsync -avz --delete \
             -e "ssh -o StrictHostKeyChecking=no -i /tmp/deploy_key" \
             /github/workspace/ root@121.196.229.11:/var/www/jk-probability/
-          echo "Deployment completed at $(date)"     
+          echo "Deployment completed at $(date)"          
