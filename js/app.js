@@ -382,6 +382,8 @@ form.addEventListener('submit', async (e) => {
   try {
     const newSub = await postSubmission(name, probVal.toFixed(1));
     submissions.push(newSub);
+    renderDots(newSub.id);
+    renderCharts();
   } catch (e) {
     submitBtn.classList.remove('loading');
     submitBtn.disabled = false;
@@ -401,7 +403,6 @@ form.addEventListener('submit', async (e) => {
   submitBtn.disabled = false;
 
   showToast();
-  renderDots(newSub.id);
 });
 
 // ----- Toast -----
