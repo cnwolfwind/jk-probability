@@ -1,7 +1,28 @@
 // ===== JK概率 - App JS =====
 
-// ----- 数据（Mock 演示数据）-----
-let submissions = [];
+// ----- API -----
+const API_BASE = '';
+
+async function fetchSubmissions() {
+  try {
+    const res = await fetch(`${API_BASE}/api/submissions`);
+    if (!res.ok) throw new Error('Failed to fetch');
+    return await res.json();
+  } catch (e) {
+    return [];
+  }
+}
+
+async function postSubmission(name, probability) {
+  const res = await fetch(`${API_BASE}/api/submit`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, probability }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Submit failed');
+  return data.data;
+}
 
 // Chart.js instances
 let pieChartInstance = null;
@@ -40,7 +61,9 @@ function initBgVideo() {
     btn.innerHTML = '🔇';
     btn.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;z-index:10;background:rgba(14,14,22,0.7);border:1px solid rgba(168,180,200,0.2);border-radius:4px;color:rgba(168,180,200,0.6);font-size:1rem;padding:0.4rem 0.6rem;cursor:pointer;backdrop-filter:blur(6px);';
     document.body.appendChild(btn);
-    let muted = true;
+    let muted = false;
+    audio.muted = false;
+    btn.innerHTML = '🔊';
     btn.addEventListener('click', () => {
       muted = !muted;
       audio.muted = muted;
@@ -356,16 +379,15 @@ form.addEventListener('submit', async (e) => {
   submitBtn.classList.add('loading');
   submitBtn.disabled = true;
 
-  await new Promise(r => setTimeout(r, 700));
-
-  const newSub = {
-    id: 'sub_' + Date.now(),
-    name,
-    probability: probVal.toFixed(1),
-    createdAt: Date.now(),
-  };
-
-  submissions.push(newSub);
+  try {
+    const newSub = await postSubmission(name, probVal.toFixed(1));
+    submissions.push(newSub);
+  } catch (e) {
+    submitBtn.classList.remove('loading');
+    submitBtn.disabled = false;
+    alert('提交失败，请重试');
+    return;
+  }
 
   // Reset form
   nameInput.value = '';
@@ -422,10 +444,13 @@ function renderCalligraphy() {
 }
 
 // ----- Init -----
-function init() {
+async function init() {
   initBgVideo();
   drawTicks();
   updateSliderVisual(500);
+  
+  // Load submissions from server
+  submissions = await fetchSubmissions();
   renderDots();
   renderCalligraphy();
 }
