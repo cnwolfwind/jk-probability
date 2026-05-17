@@ -756,7 +756,7 @@ body {
 }
 #admin-link {
   position: fixed;
-  bottom: 1.5rem;
+  bottom: 0.5rem;
   left: 50%;
   transform: translateX(-50%);
   z-index: 9999;
@@ -772,7 +772,7 @@ body {
 /* ===== VERSION TAG ===== */
 #version-tag {
   position: fixed;
-  bottom: 0.5rem;
+  bottom: 1.5rem;
   left: 50%;
   transform: translateX(-50%);
   z-index: 9999;
