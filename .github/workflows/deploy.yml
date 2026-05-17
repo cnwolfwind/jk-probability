@@ -24,18 +24,31 @@ jobs:
             set -e
             TARGET="/var/www/jk-probability"
             
-            # Pull latest from GitHub
+            # Backup user data before reset
+            DATA_FILE="$TARGET/submissions.json"
+            DATA_BACKUP="/tmp/submissions.json.bak"
+            if [ -f "$DATA_FILE" ]; then
+              cp "$DATA_FILE" "$DATA_BACKUP"
+            fi
+            
+            # Pull latest code from GitHub
             cd "$TARGET"
             git fetch origin main
             git reset --hard origin/main
             
-            # Ensure submissions.json is writable
-            touch "$TARGET/submissions.json"
-            chmod 666 "$TARGET/submissions.json"
+            # Restore user data (git reset would overwrite it)
+            if [ -f "$DATA_BACKUP" ]; then
+              cp "$DATA_BACKUP" "$DATA_FILE"
+            fi
+            
+            # Ensure data file exists and is writable
+            touch "$DATA_FILE"
+            chmod 666 "$DATA_FILE"
             
             # Restart PM2
             pm2 stop jk-server 2>/dev/null || true
-            pm2 start "$TARGET/ecosystem.config.js" || pm2 start server.js --name jk-server
+            pm2 start "$TARGET/ecosystem.config.js" 2>/dev/null || \
+              pm2 start server.js --name jk-server
             pm2 save
             
-            echo "Deployed $(date)"
+            echo "Deployed $(date) | data preserved"
