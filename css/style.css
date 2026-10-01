@@ -784,3 +784,56 @@ body {
   user-select: none;
   white-space: nowrap;
 }
+
+/* ===== QUICK LINKS ===== */
+.quick-links-section {
+  position: relative;
+  z-index: 1;
+  padding: 0 2rem 1.5rem;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.quick-links-grid {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.quick-link-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background: rgba(18, 18, 26, 0.55);
+  border: 1px solid rgba(168, 180, 200, 0.1);
+  border-radius: 10px;
+  padding: 16px 20px;
+  text-decoration: none;
+  color: var(--color-text);
+  transition: all 0.3s;
+  min-width: 180px;
+  backdrop-filter: blur(6px);
+}
+
+.quick-link-card:hover {
+  border-color: rgba(168, 180, 200, 0.3);
+  background: rgba(18, 18, 26, 0.7);
+  transform: translateY(-2px);
+}
+
+.quick-link-icon {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.quick-link-label {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+}
+
+.quick-link-desc {
+  font-size: 11px;
+  color: var(--color-text-dim);
+  margin-top: 4px;
+}
